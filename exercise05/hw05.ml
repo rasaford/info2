@@ -1,5 +1,9 @@
 let todo _ = failwith "TODO"
 
+let rec print_int_list (l : int list) = Printf.printf "Got: ["; List.iter (fun x -> Printf.printf "%d, " x) l; Printf.printf "]\n"; ()
+let rec print_char_list (l : char list) = Printf.printf "Got: ["; List.iter (fun x -> Printf.printf "%c, " x) l; Printf.printf "]\n"; ()
+let rec print_float_list (l : float list) = Printf.printf "Got: ["; List.iter (fun x -> Printf.printf "%f, " x) l; Printf.printf "]\n"; ()
+
 (* Existing definitions from tutorial assignments *)
 type student = {
   first_name : string;
@@ -39,18 +43,18 @@ let rec remove_by_id id db =
 let rec count_in_semester sem db = 
   match db with [] -> 0
               | x::xs -> if x.semester = sem
-                then x.semester + count_in_semester sem xs
+                then 1 + count_in_semester sem xs
                 else count_in_semester sem xs
 
 
 let rec student_avg_grade (id : int) db = 
   let rec sum l = match l with [] -> 0.0
                              | x::xs -> let (_, y) = x in y +. sum xs in
-  let rec count l = match l with [] -> 0.0
-                               | x::xs -> 1.0 +. count xs in 
+  let rec count l = match l with [] -> 0
+                               | x::xs -> 1 + count xs in 
   match db with [] -> 0.0
-              | x::xs -> if x.id = id && (count x.grades) != 0.0
-                then sum x.grades /. count x.grades
+              | x::xs -> if x.id = id && (count x.grades) != 0
+                then sum x.grades /. float_of_int (count x.grades)
                 else student_avg_grade id xs
 
 
@@ -60,16 +64,16 @@ let course_avg_grade (course : int) (db : student list) =
                                          if a = course 
                                          then b +. sum_if course xs
                                          else sum_if course xs in
-  let rec len_if course l = match l with [] -> 0.0
-                                       | x::xs -> let (a,b) = x in 
+  let rec len_if course l = match l with [] -> 0
+                                       | x::xs -> let (a,_) = x in 
                                          if a = course 
-                                         then 1.0 +. len_if course xs
+                                         then 1 + len_if course xs
                                          else len_if course xs in
   let rec sum course db = match db with [] -> 0.0
                                       | x::xs -> sum_if course x.grades +. sum course xs in 
-  let rec len course db = match db with [] -> 0.0
-                                      | x::xs -> len_if course x.grades +. len course xs in
-  if len course db != 0.0 then sum course db /. len course db else 0.0
+  let rec len course db = match db with [] -> 0
+                                      | x::xs -> len_if course x.grades + len course xs in
+  if len course db != 0 then sum course db /. float_of_int (len course db) else 0.0
 
 
 
@@ -126,10 +130,10 @@ let rec sublist (a : 'a list) (b : 'a list) =
     match a with [] -> b = [] 
                | x::xs -> 
                  match b with [] -> true
-                            | y::ys -> if x = y then is_prefix ys xs else false in 
+                            | y::ys -> if x <> y then false else is_prefix ys xs in 
   if List.length b > List.length a then false else
     match a with [] -> false 
-               | x::xs -> if is_prefix b [x] then true else sublist xs b
+               | x::xs -> if is_prefix b (x::xs) then true else sublist xs b
 
 let lt_seq (l : 'a list) = 
   (* Expand the list prev to be the maximum matching size *)
@@ -139,7 +143,7 @@ let lt_seq (l : 'a list) =
                       | x::xs -> 
                         let to_match = curr @ [x] in
                         let prev = prev_list @ [x] in
-                        if sublist prev to_match && sublist xs to_match
+                        if  sublist prev to_match && sublist xs to_match
                         then expand prev xs to_match to_match
                         else max in
   let rec iterate prev_list rem_list max = 
@@ -149,10 +153,6 @@ let lt_seq (l : 'a list) =
                         then iterate (prev_list @ [x]) xs m 
                         else iterate (prev_list @ [x]) xs max in
   iterate [] l []
-
-(* let rec print_list list = function 
-    [] -> ()
-  | e::l -> print_float e; print_string " " ; print_list l*)
 
 (*****************************************************************************)
 (**************************** END OF HOMEWORK ********************************)
@@ -250,7 +250,7 @@ let () =
   let open List in
   let open Printf in
   let fail l =
-    let line = nth lines l in
+    let line = nth lines (l-1) in
     let test = String.sub line 25 (String.length line - 27) in
     printf "test \027[31;m%s\027[0;m (line %d) failed!\n" test l;
   in
@@ -261,4 +261,5 @@ let () =
   in
   let passed = filter (fun x -> x) (map test tests) in
   printf "passed %d/%d tests\n" (length passed) (length tests)
+
 
