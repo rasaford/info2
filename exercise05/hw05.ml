@@ -124,7 +124,7 @@ let rec derive_poly coeffs = match coeffs
 (* Assignment 5.9 [4 Points] *)
 
 (* is b sublist of a ? *)
-let rec sublist (a : 'a list) (b : 'a list) = 
+let rec sublist a b = 
   (* Is b prefix of a ? *)
   let rec is_prefix (b : 'a list) (a : 'a list) = 
     match a with [] -> b = [] 
@@ -135,10 +135,9 @@ let rec sublist (a : 'a list) (b : 'a list) =
     match a with [] -> false 
                | x::xs -> if is_prefix b (x::xs) then true else sublist xs b
 
-let lt_seq (l : 'a list) = 
+let lt_seq l = 
   (* Expand the list prev to be the maximum matching size *)
-  (* let diff l1 l2 = List.filter (fun x -> not (List.mem x l2)) l1 in *)
-  let rec expand (prev_list : 'a list) (rem_list : 'a list) (curr : 'a list) (max : 'a list) = 
+  let rec expand prev_list rem_list curr max = 
     match rem_list with [] -> []
                       | x::xs -> 
                         let to_match = curr @ [x] in
@@ -261,5 +260,3 @@ let () =
   in
   let passed = filter (fun x -> x) (map test tests) in
   printf "passed %d/%d tests\n" (length passed) (length tests)
-
-
