@@ -8,9 +8,9 @@ type nat = Zero | Succ of nat
 type quadtree_node = NoPoint 
                    | Point of int * int
                    | QNode of quadtree_node (* bottom left *)
-                            * quadtree_node (* top left *)
-                            * quadtree_node (* bottom right *)
-                            * quadtree_node (* top right *)
+                              * quadtree_node (* top left *)
+                              * quadtree_node (* bottom right *)
+                              * quadtree_node (* top right *)
 type quadtree = { width:int; height:int; root:quadtree_node }
 
 (* 6.6: utilitiy functions *)
@@ -18,18 +18,18 @@ type quadtree = { width:int; height:int; root:quadtree_node }
 let print_quadtree filename qtree =
   let file = open_out filename in 
   let rec impl (x1, y1, x2, y2) = function NoPoint -> ()
-    | Point (x,y) -> Printf.fprintf file "<circle cx=\"%d\" cy=\"%d\" r=\"1\" fill=\"black\"/>\n" x (qtree.height - y)
-    | QNode (nn, np, pn, pp) -> 
-      let xmid = (x1 + x2) / 2 in 
-      let ymid = (y1 + y2) / 2 in 
-      Printf.fprintf file "<line x1=\"%d\" y1=\"%d\" x2=\"%d\" y2=\"%d\" stroke=\"black\" stroke-width=\"1\"/>\n" 
-        x1 (qtree.height-ymid) x2 (qtree.height-ymid);
-      Printf.fprintf file "<line x1=\"%d\" y1=\"%d\" x2=\"%d\" y2=\"%d\" stroke=\"black\" stroke-width=\"1\"/>\n" 
-        xmid (qtree.height -y1) xmid (qtree.height-y2);
-      impl (x1, y1, xmid, ymid) nn; 
-      impl (x1, ymid, xmid, y2) np; 
-      impl (xmid, y1, x2, ymid) pn; 
-      impl (xmid, ymid, x2, y2) pp
+                                         | Point (x,y) -> Printf.fprintf file "<circle cx=\"%d\" cy=\"%d\" r=\"1\" fill=\"black\"/>\n" x (qtree.height - y)
+                                         | QNode (nn, np, pn, pp) -> 
+                                           let xmid = (x1 + x2) / 2 in 
+                                           let ymid = (y1 + y2) / 2 in 
+                                           Printf.fprintf file "<line x1=\"%d\" y1=\"%d\" x2=\"%d\" y2=\"%d\" stroke=\"black\" stroke-width=\"1\"/>\n" 
+                                             x1 (qtree.height-ymid) x2 (qtree.height-ymid);
+                                           Printf.fprintf file "<line x1=\"%d\" y1=\"%d\" x2=\"%d\" y2=\"%d\" stroke=\"black\" stroke-width=\"1\"/>\n" 
+                                             xmid (qtree.height -y1) xmid (qtree.height-y2);
+                                           impl (x1, y1, xmid, ymid) nn; 
+                                           impl (x1, ymid, xmid, y2) np; 
+                                           impl (xmid, y1, x2, ymid) pn; 
+                                           impl (xmid, ymid, x2, y2) pp
   in
   Printf.fprintf file "<?xml version=\"1.0\" standalone=\"no\"?>\n
     <!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n
@@ -48,7 +48,7 @@ type rat = int * int (* num, denom *)
 type expr = Const of rat
           | UnOp of unary_op * expr
           | BinOp of binary_op * expr * expr
-	
+
 
 (* 6.8: type definitions *)
 type tree = Empty 
@@ -62,14 +62,14 @@ let print_tree filename btree =
   Printf.fprintf file "digraph Tree {\n";
   let rec print next_id = function Empty -> 
     Printf.fprintf file "\tn%d[shape=rectangle,label=\"\"];\n" next_id; next_id + 1, next_id
-  | Node (x, l, r) ->
-    let node_id = next_id in
-    Printf.fprintf file "\tn%d[label=\"%d\"];\n" node_id x;
-    let next_id, lid = print (next_id + 1) l in
-    let next_id, rid = print next_id r in 
-    (Printf.fprintf file "\tn%d -> n%d[label=\"L\"];\n" node_id lid);
-    (Printf.fprintf file "\tn%d -> n%d[label=\"R\"];\n" node_id rid);
-    next_id, node_id
+                                 | Node (x, l, r) ->
+                                   let node_id = next_id in
+                                   Printf.fprintf file "\tn%d[label=\"%d\"];\n" node_id x;
+                                   let next_id, lid = print (next_id + 1) l in
+                                   let next_id, rid = print next_id r in 
+                                   (Printf.fprintf file "\tn%d -> n%d[label=\"L\"];\n" node_id lid);
+                                   (Printf.fprintf file "\tn%d -> n%d[label=\"R\"];\n" node_id rid);
+                                   next_id, node_id
   in
   ignore(print 0 btree);
   Printf.fprintf file "}";
