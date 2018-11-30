@@ -80,17 +80,31 @@ let print_tree filename btree =
 (**************************** HOMEWORK STARTS HERE ***************************)
 (*****************************************************************************)
 (* Assignment 6.5 [3 points] *)
-let int_to_nat = todo
+let rec int_to_nat i =  match i with 
+  | 0 -> Zero
+  | i -> Succ(int_to_nat (i-1))
 
-let nat_to_int = todo
+let rec nat_to_int i = match i with
+  | Zero -> 0
+  | Succ(i) -> 1 + nat_to_int(i)
 
-let add = todo
+let rec add a b = match a with 
+  | Zero -> b
+  | Succ(i) -> Succ(add i b)
 
-let mul = todo
+let rec mul a b = match b with 
+  | Zero -> Zero
+  | Succ(i) -> add a (mul a i)
 
-let pow = todo
+let rec pow a b = match b with
+  | Zero -> Succ(Zero)
+  | Succ(i) -> mul a (pow a i)
 
-let leq = todo
+let rec leq a b = match (a,b) with 
+  | (Zero, Zero) -> true
+  | (Zero, Succ(i)) -> true
+  | (Succ(i), Zero) -> false
+  | (Succ(i), Succ(j)) -> leq i j
 
 
 (*****************************************************************************)
@@ -134,6 +148,13 @@ let (=~) (n,d) (n',d') =
   (n',d') = (k * n / g, d / g)
 let insert_points = List.fold_left (fun t p -> insert p t) a66_t
 let tests = [
+  (* Sandesh's tests *)
+  __LINE_OF__ (fun () -> (mul (Succ (Succ Zero)) (Succ (Succ Zero))) = Succ (Succ (Succ (Succ Zero))));
+  __LINE_OF__ (fun () -> (mul (Succ (Succ (Succ Zero))) (Succ (Succ Zero))) = Succ (Succ (Succ (Succ (Succ (Succ Zero))))));
+  __LINE_OF__ (fun () -> (mul (Succ (Succ (Succ Zero))) Zero = Zero));
+  __LINE_OF__ (fun () -> (leq (Succ (Succ (Succ Zero))) Zero = false));
+  __LINE_OF__ (fun () -> (leq Zero Zero) = true);
+  __LINE_OF__ (fun () -> (leq (Succ (Succ Zero)) (Succ (Succ Zero))) = true);
   (* tests for 6.5 *)
   __LINE_OF__ (fun () -> (int_to_nat 0) = Zero);
   __LINE_OF__ (fun () -> (int_to_nat 1) = Succ Zero);
