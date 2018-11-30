@@ -127,26 +127,33 @@ let rec qt_insert p tl br root = let (px, py) = p in
   | Point(i, j) -> if px != i || py != j 
     then qt_split (i, j) tl br |> qt_insert p tl br
     else Point(i, j)
-  | QNode(s_bl, s_tl, s_br, s_tr) -> 
+  | QNode(s_tl, s_bl, s_tr, s_br) -> 
     let (x1, y1) = tl in let (x2, y2) = br in
     let (xc, yc) = ((x2 + x1) / 2, (y2 + y1) / 2) in 
     if px < xc then 
       if py < yc 
-      then QNode(qt_insert p (x1, yc) (xc, y2) s_bl, s_tl, s_br, s_tr)
-      else QNode(s_bl, qt_insert p tl (xc, yc) s_tl, s_br, s_tr)
+      then QNode(qt_insert p (x1, y1) (xc, yc) s_tl, s_bl, s_tr, s_br)
+      else QNode(s_tl, qt_insert p (x1, yc) (xc, y2) s_bl, s_tr, s_br)
     else if py < yc
-    then QNode(s_bl, s_tl, qt_insert p (xc, yc) br s_br, s_tr)
-    else QNode(s_bl, s_tl, s_br, qt_insert p (xc, y1) (x2, yc) s_tr)
+    then QNode(s_tl, s_bl, qt_insert p (xc, y1) (x2, yc) s_tr, s_br)
+    else QNode(s_tl, s_bl, s_tr, qt_insert p (xc, yc) (x2, y2) s_br)
 
-let insert p t = 
-  let t = {t with root = qt_insert p (0,0) (t.width, t.height) t.root; } in
-  print_quadtree "test.svg" t;
-  t
+let insert p t = { t with root = qt_insert p (0,0) (t.width, t.height) t.root; }
 
 
 (*****************************************************************************)
 (* Assignment 6.6 [4 points] *)
-let eval_expr = todo
+let rec eval_expr expr = match expr with 
+  | Const(a,b) -> (a,b)
+  | UnOp(op, e) -> let (a, b) = eval_expr e in (-a, b)
+  | BinOp(op, e1, e2) -> 
+    let (a, b) = eval_expr e1 in
+    let (c, d) = eval_expr e2 in 
+    match op with Add -> (a*d + b*c, b*d)
+                | Sub -> (a*d - b*c, b*d)
+                | Mul -> (a * c, b * d)
+                | Div -> (a * d, b * c)
+
 
 
 (*****************************************************************************)
@@ -208,7 +215,7 @@ let tests = [
   __LINE_OF__ (fun () -> (insert_points [6,6;2,2]).root = QNode (QNode (Point (2,2), NoPoint, NoPoint, Point (6,6)), NoPoint, NoPoint, NoPoint));
   __LINE_OF__ (fun () -> (insert_points [2,14;6,11;11,2;14,6]).root = QNode (NoPoint, QNode (NoPoint, Point (2,14), Point (6, 11), NoPoint), QNode (Point (11,2), NoPoint, NoPoint, Point(14,6)), NoPoint));
   (* tests for 6.7 *)
-  (* __LINE_OF__ (fun () -> (eval_expr (Const (2, 3))) =~ (2, 3));
+  __LINE_OF__ (fun () -> (eval_expr (Const (2, 3))) =~ (2, 3));
   __LINE_OF__ (fun () -> (eval_expr (UnOp (Neg, Const (4, 5)))) =~ (-4, 5));
   __LINE_OF__ (fun () -> (eval_expr (UnOp (Neg, UnOp (Neg, Const (12, 3))))) =~ (4, 1));
   __LINE_OF__ (fun () -> (eval_expr (BinOp (Add, Const (1, 4), Const (1, 8)))) =~ (3, 8));
@@ -216,9 +223,9 @@ let tests = [
   __LINE_OF__ (fun () -> (eval_expr (BinOp (Mul, Const (3, 4), Const (1, 8)))) =~ (3, 32));
   __LINE_OF__ (fun () -> (eval_expr (BinOp (Div, Const (3, 4), Const (1, 8)))) =~ (6, 1));
   __LINE_OF__ (fun () -> (eval_expr a67_ex1) =~ (-3,2));
-  __LINE_OF__ (fun () -> (eval_expr a67_ex2) =~ (5, 1)); *)
+  __LINE_OF__ (fun () -> (eval_expr a67_ex2) =~ (5, 1));
   (* tests for 6.8 *)
-  (* __LINE_OF__ (fun () -> (crawl [New 3] Empty) = Node (3, Empty, Empty));
+  __LINE_OF__ (fun () -> (crawl [New 3] Empty) = Node (3, Empty, Empty));
   __LINE_OF__ (fun () -> (crawl [New 3] a68_t) = Node (3, Empty, Empty));
   __LINE_OF__ (fun () -> (crawl [New 3; Right; New 2] Empty) = Node (3, Empty, Node (2, Empty, Empty)));
   __LINE_OF__ (fun () -> (crawl [Left; New 3] a68_t) = Node (4, Node (3, Empty, Empty), a68_t_r));
@@ -228,7 +235,7 @@ let tests = [
   __LINE_OF__ (fun () -> (crawl [Left; Push; Right; Pop] a68_t) = Node (4, Node (2, Node (1, Empty, Empty), Node (2, Node (1, Empty, Empty), Node (3, Empty, Empty))), a68_t_r));
   __LINE_OF__ (fun () -> (crawl [Left; Up; New 3] a68_t) = Node (3, Empty, Empty));
   __LINE_OF__ (fun () -> (crawl [Left; Right; Up; Left; Up; Up; New 3] a68_t) = Node (3, Empty, Empty));
-  __LINE_OF__ (fun () -> (crawl [Left; Push; Up; Right; Push; Up; Left; Pop; Up; Right; Pop] a68_t) = Node (4, a68_t_r, a68_t_l));   *)
+  __LINE_OF__ (fun () -> (crawl [Left; Push; Up; Right; Push; Up; Left; Pop; Up; Right; Pop] a68_t) = Node (4, a68_t_r, a68_t_l));  
 ]
 
 let () =
