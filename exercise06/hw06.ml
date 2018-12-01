@@ -154,11 +154,45 @@ let rec eval_expr expr = match expr with
                 | Mul -> (a * c, b * d)
                 | Div -> (a * d, b * c)
 
-
-
 (*****************************************************************************)
 (* Assignment 6.8 [7 points] *)
-let crawl = todo
+
+let rec has_up comm =
+  let h comm cnt =  match comm with 
+    | [] -> cnt = 0
+    | x::xs -> if x == Up 
+      then if cnt = 0 then true else has_up xs (cnt - 1)
+      else if x = Left || x = Right 
+      then has_up xs (cnt + 1)
+      else has_up xs cnt in
+  h comm 0
+
+
+let rec cr_interpret comm root (stack : tree list) parent = match comm with
+  | [] -> root
+  | x::xs ->  match root with 
+    | Empty -> (match x with
+        | Left -> failwith "Empty Tree has no left child"
+        | Right -> failwith "Empty Tree has no right child"
+        | Up -> failwith "Unable to move up on an empty tree"
+        | New(i) -> cr_interpret xs (Node(i, Empty, Empty)) stack parent
+        | Delete -> cr_interpret xs Empty stack parent
+        | Push -> cr_interpret xs root (root::parent) parent
+        | Pop -> cr_interpret xs (List.hd stack) (List.tl stack) parent)
+    | Node(v, l, r) -> match x with 
+      | Left -> 
+        if has_up (x::xs) then cr_interpret xs l stack (root::parent)
+        else Node(v, cr_interpret xs l stack (root::parent), r)
+      | Right -> 
+        if has_up (x::xs) then cr_interpret xs r stack (root::parent)
+        else Node(v, l, cr_interpret xs r stack (root::parent))
+      | Up -> cr_interpret xs (List.hd parent) stack (List.tl parent)
+      | New(i) -> cr_interpret xs (Node(i, Empty, Empty)) stack parent
+      | Delete -> cr_interpret xs Empty stack parent
+      | Push -> cr_interpret xs root (root::parent) parent
+      | Pop -> cr_interpret xs (List.hd stack) (List.tl stack) parent
+
+let crawl comm tree = cr_interpret comm tree [] []
 
 
 (*****************************************************************************)
