@@ -50,3 +50,8 @@ let rec rev l =
 let rec nth i l = match l with
   | [] -> failwith "Out of bounds"
   | x::xs -> if i = 0 then x else nth (i - 1) xs
+
+
+let map f = function
+  | [] -> []
+  | x::xs -> (f x)::(map f xs)

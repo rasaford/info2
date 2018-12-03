@@ -157,18 +157,17 @@ let rec eval_expr expr = match expr with
 (*****************************************************************************)
 (* Assignment 6.8 [7 points] *)
 
-let rec has_up comm =
-  let h comm cnt =  match comm with 
+let has_up comm =
+  let rec h comm cnt =  match comm with 
     | [] -> cnt = 0
     | x::xs -> if x == Up 
-      then if cnt = 0 then true else has_up xs (cnt - 1)
+      then if cnt = 0 then true else h xs (cnt - 1)
       else if x = Left || x = Right 
-      then has_up xs (cnt + 1)
-      else has_up xs cnt in
+      then h xs (cnt + 1)
+      else h xs cnt in
   h comm 0
 
-
-let rec cr_interpret comm root (stack : tree list) parent = match comm with
+let rec cr_interpret comm root stack parent = match comm with
   | [] -> root
   | x::xs ->  match root with 
     | Empty -> (match x with

@@ -1,0 +1,21 @@
+INFO: latexindent version 3.4.1, 2018-01-18, a script to indent .tex files
+      latexindent lives here: /usr/local/texlive/2018/texmf-dist/scripts/latexindent/
+      Fri Nov 30 19:22:56 2018
+      Filename: /Users/databook/projects/src/gitlab.lrz.de/llr-tum/teaching/era-tutor/Tutoruebung/Aufgaben/neu/u06/era_tutor06_lsg.tex
+INFO: Processing switches:
+INFO: Directory for backup files and indent.log: /Users/databook/projects/src/gitlab.lrz.de/llr-tum/teaching/era-tutor/Tutoruebung/Aufgaben/neu/u06
+INFO: YAML settings read: defaultSettings.yaml
+      Reading defaultSettings.yaml from /usr/local/texlive/2018/texmf-dist/scripts/latexindent/defaultSettings.yaml
+INFO: YAML settings read: indentconfig.yaml or .indentconfig.yaml
+      Home directory is /Users/databook (didn't find either indentconfig.yaml or .indentconfig.yaml)
+      To specify user settings you would put indentconfig.yaml here: /Users/databook/indentconfig.yaml
+      Alternatively, you can use the hidden file .indentconfig.yaml as: /Users/databook/.indentconfig.yaml
+INFO: Phase 1: searching for objects
+INFO: Phase 2: finding surrounding indentation
+INFO: Phase 3: indenting objects
+INFO: Phase 4: final indentation check
+INFO: Output routine:
+      Not outputting to file; see -w and -o switches for more options.
+      --------------
+INFO: Please direct all communication/issues to:
+      https://github.com/cmhughes/latexindent.pl
