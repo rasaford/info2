@@ -25,37 +25,111 @@ type graph = (int * float * int) list
 (**************************** HOMEWORK STARTS HERE ***************************)
 (*****************************************************************************)
 (* Assignment 7.4 [7 points] *)
-let f1 = todo
-let f2 = todo
-let f3 = todo
-let f4 = todo
-let f5 = todo
-let f6 = todo
-let f7 = todo
+let f1 acc b = acc + 1
+let f2 acc b = if (List.length b) > (List.length acc) then b else acc
+let f3 acc b = let (a1, a2) = b in acc @ [(a2, a1)]
+let f4 acc b= if ((List.length acc) mod 2) = 0 then b::acc else acc @ [b]
+let f5 acc b = fun k -> let (k_i, v_i) = b in 
+  if k = k_i then v_i else acc k
+let f6 acc b = (b (List.hd acc))::acc
+let f7 acc b = acc * acc * b
 
 (*****************************************************************************)
 (* Assignment 7.5 [7 points] *)
-let rec eval_expr (s : state) (e : expr) : value =
-  match e with Const c -> Rat c
+
+let non_zero e = match e with  
+  | Rat(n, d) ->  n != 0
+  | Fun(v, s, e) -> false
+
+
+let add_state n_var n_val old_state = 
+  fun v -> if v = n_var then Some(n_val) else old_state v
+
+let rec eval_expr (s : state) (e : expr) : value = match e with 
+  | Const c -> Rat c
   | UnOp (Neg, e) -> (match eval_expr s e with
-    | Rat (n, d) -> Rat (-n, d)
-    | _ -> failwith "invalid type")
+      | Rat (n, d) -> Rat (-n, d)
+      | _ -> failwith "invalid type")
   | BinOp (op, e1, e2) ->
     (match eval_expr s e1, eval_expr s e2 with
-    | Rat (n1, d1), Rat (n2, d2) ->
-      (match op with
-      | Add -> Rat (n1*d2+n2*d1,d1*d2)
-      | Sub -> Rat (n1*d2-n2*d1,d1*d2)
-      | Mul -> Rat (n1*n2,d1*d2)
-      | Div -> Rat (n1*d2,d1*n2))
-    | _ -> failwith "invalid type")
-  (* TODO: continue here *)
-    | _ -> todo ()
+     | Rat (n1, d1), Rat (n2, d2) ->
+       (match op with
+        | Add -> Rat (n1*d2+n2*d1,d1*d2)
+        | Sub -> Rat (n1*d2-n2*d1,d1*d2)
+        | Mul -> Rat (n1*n2,d1*d2)
+        | Div -> Rat (n1*d2,d1*n2))
+     | _ -> failwith "invalid type")
+  | Var x -> (let v = s x in match v with 
+    | Some(a) -> a
+    | None -> failwith "variable undefined")
+  | Func (arg, body) -> Fun(arg , s, body)
+  | Bind (x, e, b) -> let vl = eval_expr s e in eval_expr (add_state x vl s) b
+  | App (f, a) -> 
+    (let func = eval_expr s f in
+     let arg = eval_expr s a in
+     match func with 
+     | Rat(a, b) -> failwith "cannot use rational number as function"
+     | Fun(arg_name, state, body) -> let new_s = add_state arg_name arg s in 
+       eval_expr new_s body)
+  | Ite (c, t, e) -> if non_zero (eval_expr s c) then eval_expr s t else eval_expr s e
+
+
 
 
 (*****************************************************************************)
 (* assignment 7.6 [6 points] *)
-let mst = todo
+
+(* let rec is_bridge e (sub : graph list) acc = match sub with 
+   | [] -> acc
+   | x::xs -> 
+    if List.exists (fun v -> let (s,_,t) = e in s = v || t = v) x 
+    then let term = is_bridge e xs acc in (x @ term)::acc
+    else is_bridge e xs (x::acc) *)
+
+(* let rec incident e g = 
+
+   let rec find_min (edges : graph) tree min = 
+    let (_, mw, _) = min in
+    match edges with 
+    | [] -> min
+    | e::es -> let (s, w, t) = e in
+      if (not (List.exists (fun x -> (let (xs,_, xt) = x in xs = s && xt = t)) tree)) && w < mw 
+      then find_min es tree e
+      else find_min es tree min
+
+   let rec mst_r g tree border = match border with
+   | [] -> tree
+   | e::es -> let min = find_min border tree (List.hd border) in *)
+
+let rec incident sub g acc = match sub with 
+  | [] -> acc
+  | e::es -> let (s, _, t) = e in
+    let is_border = (fun x -> let (xs, _ ,xt) = x in (xs = s) <> (xt = t)) in
+    if List.exists is_border g
+    then incident sub g (e::acc)
+    else incident sub g acc
+let remove l e = 
+  let rec r l e acc = match l with 
+    | [] -> acc
+    | x::xs -> if x = e then r xs e acc else x::(r xs e acc) in
+  List.rev (r l e [])
+
+let min_edge (edges : graph) = 
+  let f = fun acc b -> let (_, wb, _) = b in 
+    let (_, wa, _) = acc in 
+    if wb < wa then b else acc in
+  List.fold_left f (List.hd edges) edges
+
+let rec mst_r (g : graph) (border : graph) (mst : graph) = let edges = incident border g [] in 
+  if (0 = List.length edges) then mst
+  else let m = min_edge edges in
+    let new_g = remove g m in
+    let new_b = mst @ edges in
+    mst_r new_g new_b (m::mst)
+
+let mst g = mst_r g [(min_edge g)] []
+
+
 
 
 (*****************************************************************************)
@@ -134,14 +208,14 @@ let test_ee p e =
 
 let test_mst g e =
   let sort_t l = List.map (fun (s,w,d) -> if d < s then (d, w, s) else (s, w, d)) l |>
-    List.sort (fun (s1,_,d1) (s2,_,d2) -> if s1 = s2 then compare d1 d2 else compare s1 s2) in
+                 List.sort (fun (s1,_,d1) (s2,_,d2) -> if s1 = s2 then compare d1 d2 else compare s1 s2) in
   let t1 = (sort_t (mst g)) in
   let t2 = (sort_t e) in
   let rec cmp l1 l2 = match l1, l2 with [],[] -> true
-    | (s1,w1,d1)::xs, (s2,w2,d2)::ys -> s1 = s2 && d1 = d2 && w1 =. w2 && cmp xs ys
-    | _, _ -> false
+                                      | (s1,w1,d1)::xs, (s2,w2,d2)::ys -> s1 = s2 && d1 = d2 && w1 =. w2 && cmp xs ys
+                                      | _, _ -> false
   in
-(* print_mst_for t1; print_mst_for t2; *)
+  (* print_mst_for t1; print_mst_for t2; *)
   cmp t1 t2
 
 let tests = [

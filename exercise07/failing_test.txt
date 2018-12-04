@@ -1,0 +1,9 @@
+ App (
+     Bind ("x", Const (2,1), 
+            Func (
+            "a", Bind ("x", BinOp (Add, Var "a", Var "x"), 
+                BinOp (Mul, Var "x", Var "x")
+            )
+        )), 
+    Const (10, 2)
+)
