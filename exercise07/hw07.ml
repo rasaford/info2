@@ -42,7 +42,7 @@ let non_zero e = match e with
   | Fun(v, s, e) -> false
 
 
-let add_state n_var n_val old_state = 
+let add_state (n_var : var) (n_val : value) (old_state: var -> value option) = 
   fun v -> if v = n_var then Some(n_val) else old_state v
 
 let rec eval_expr (s : state) (e : expr) : value = match e with 
@@ -59,18 +59,15 @@ let rec eval_expr (s : state) (e : expr) : value = match e with
         | Mul -> Rat (n1*n2,d1*d2)
         | Div -> Rat (n1*d2,d1*n2))
      | _ -> failwith "invalid type")
-  | Var x -> (let v = s x in match v with 
-    | Some(a) -> a
-    | None -> failwith "variable undefined")
+  | Var x -> (match s x with 
+      | Some(a) -> a
+      | _ -> failwith "variable undefined")
   | Func (arg, body) -> Fun(arg , s, body)
-  | Bind (x, e, b) -> let vl = eval_expr s e in eval_expr (add_state x vl s) b
-  | App (f, a) -> 
-    (let func = eval_expr s f in
-     let arg = eval_expr s a in
-     match func with 
-     | Rat(a, b) -> failwith "cannot use rational number as function"
-     | Fun(arg_name, state, body) -> let new_s = add_state arg_name arg s in 
-       eval_expr new_s body)
+  | Bind (x, e, b) -> eval_expr (add_state x (eval_expr s e) s) b
+  | App (f, a) -> (
+      match eval_expr s f with 
+      | Fun(f_a, f_s, f_b) -> eval_expr (add_state f_a (eval_expr s a) f_s) f_b
+      | _ -> failwith "cannot use rational number as function")
   | Ite (c, t, e) -> if non_zero (eval_expr s c) then eval_expr s t else eval_expr s e
 
 
@@ -127,8 +124,7 @@ let rec mst_r (g : graph) (border : graph) (mst : graph) = let edges = incident 
     let new_b = mst @ edges in
     mst_r new_g new_b (m::mst)
 
-let mst g = mst_r g [(min_edge g)] []
-
+let mst g = g
 
 
 
