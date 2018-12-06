@@ -75,58 +75,27 @@ let rec eval_expr (s : state) (e : expr) : value = match e with
 
 (*****************************************************************************)
 (* assignment 7.6 [6 points] *)
+let rec set v tree = match tree with 
+  | [] -> []
+  | x::xs -> if List.exists (fun e -> e = v) x
+    then x else set v xs
 
-(* let rec is_bridge e (sub : graph list) acc = match sub with 
-   | [] -> acc
-   | x::xs -> 
-    if List.exists (fun v -> let (s,_,t) = e in s = v || t = v) x 
-    then let term = is_bridge e xs acc in (x @ term)::acc
-    else is_bridge e xs (x::acc) *)
+let rec union a b trees = (a @ b)::(List.filter (fun x -> x != a || x != b) trees)
 
-(* let rec incident e g = 
+let rec kruskal trees edges mst = match edges with 
+  | [] -> mst
+  | x::xs -> let (s, w, t) = x in let u = set s trees in let v = set t trees in
+    if u != v then kruskal (union u v trees) xs (x::mst) else kruskal trees xs mst
 
-   let rec find_min (edges : graph) tree min = 
-    let (_, mw, _) = min in
-    match edges with 
-    | [] -> min
-    | e::es -> let (s, w, t) = e in
-      if (not (List.exists (fun x -> (let (xs,_, xt) = x in xs = s && xt = t)) tree)) && w < mw 
-      then find_min es tree e
-      else find_min es tree min
-
-   let rec mst_r g tree border = match border with
-   | [] -> tree
-   | e::es -> let min = find_min border tree (List.hd border) in *)
-
-let rec incident sub g acc = match sub with 
-  | [] -> acc
-  | e::es -> let (s, _, t) = e in
-    let is_border = (fun x -> let (xs, _ ,xt) = x in (xs = s) <> (xt = t)) in
-    if List.exists is_border g
-    then incident sub g (e::acc)
-    else incident sub g acc
-let remove l e = 
-  let rec r l e acc = match l with 
-    | [] -> acc
-    | x::xs -> if x = e then r xs e acc else x::(r xs e acc) in
-  List.rev (r l e [])
-
-let min_edge (edges : graph) = 
-  let f = fun acc b -> let (_, wb, _) = b in 
-    let (_, wa, _) = acc in 
-    if wb < wa then b else acc in
-  List.fold_left f (List.hd edges) edges
-
-let rec mst_r (g : graph) (border : graph) (mst : graph) = let edges = incident border g [] in 
-  if (0 = List.length edges) then mst
-  else let m = min_edge edges in
-    let new_g = remove g m in
-    let new_b = mst @ edges in
-    mst_r new_g new_b (m::mst)
-
-let mst g = g
-
-
+let mst (g : graph) = 
+  let edges = List.sort 
+      (fun a b -> let (_, wa, _) = a in let (_, wb, _) = b in 
+        if wa > wb then 1 else if wa < wb then -1 else 0) g in
+  let trees = List.fold_left 
+      (fun acc b -> let (u, _, v) = b in 
+        let acc = if not (List.exists (fun x -> x = [u]) acc) then  [u]::acc else acc in
+        if not (List.exists (fun x -> x = [v]) acc) then [v]::acc else acc) [] g in
+  kruskal trees edges []
 
 (*****************************************************************************)
 (***************************** HOMEWORK ENDS HERE ****************************)
