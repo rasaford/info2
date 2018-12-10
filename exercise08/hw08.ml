@@ -27,20 +27,19 @@ let rec interleave3 l1 l2 l3 =
 (*****************************************************************************)
 (* Assignment 8.6 [4 Points] *)
 
+let lagrange points = 
+  let rec l_j xj points  = match points with 
+    | [] -> fun x -> 1.
+    | x::xs -> let (xk, _) = x in 
+      let next = l_j xj xs in
+      if xj = xk then next
+      else fun x -> (x -. xk) /. (xj -. xk) *. (next x) in
+  let rec sum remaining = match remaining with  
+    | [] -> fun x -> 0.
+    | x::xs -> let (xj, yj) = x in 
+      fun x -> yj *. ((l_j xj points) x) +. ((sum xs) x) in
+  sum points
 
-let rec l_poly j xj (points: (float * float) list) = match points with 
-  | [] -> fun (x: float) -> 1.
-  | x::xs -> let (xk, _) = x in 
-    let next = l_poly j xj xs in
-    if xj = xk then next
-    else fun x -> (x -. xk) /. (xj -. xk) *. (next x) 
-
-let rec linear_combination rem j points = match rem with  
-  | [] -> fun x -> 0.
-  | x::xs -> let (xj, yj) = x in 
-    let l_j = l_poly j xj points in
-    fun x -> yj *. (l_j x) +. ((linear_combination xs (j + 1) points) x)
-let lagrange points = linear_combination points 0 points
 
 
 (*****************************************************************************)
@@ -132,10 +131,10 @@ let insert_ vs cmp t =
 let is_inorder_list_tailrec () =
   ignore(inorder_list Empty);
   (* TODO: Tutors will check *)
-  (* let l = List.init 10000 (fun x -> x) in
-     let t = insert_ l compare Empty in
-     try ignore(inorder_list t); true with Stack_overflow -> false *)
-  true
+  let l = List.init 10000 (fun x -> x) in
+  let t = insert_ l compare Empty in
+  try ignore(inorder_list t); true with Stack_overflow -> false
+(* true *)
 let check_layer_tree r t =
   let rec impl n r (LNode (x, fl, fr)) =
     if n <= 0 then true else r = x && (impl (n-1) (r+1) (fl ())) && (impl (n-1) (r+1) (fr ()))
