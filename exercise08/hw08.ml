@@ -28,23 +28,19 @@ let rec interleave3 l1 l2 l3 =
 (* Assignment 8.6 [4 Points] *)
 
 
-let rec l_poly j x_j n (points: (float * float) list) = 
-  match points with 
-  | [] -> fun (x : float) -> 1.
+let rec l_poly j xj (points: (float * float) list) = match points with 
+  | [] -> fun (x: float) -> 1.
   | x::xs -> let (xk, _) = x in 
-    let prod = l_poly j x_j (n - 1) xs in
-    if j = n then prod
-    else fun x -> (x -. xk) /. (x_j -. xk) *. (prod x) 
+    let next = l_poly j xj xs in
+    if xj = xk then next
+    else fun x -> (x -. xk) /. (xj -. xk) *. (next x) 
 
-let rec l_comb p j pts n = match p with  
+let rec linear_combination rem j points = match rem with  
   | [] -> fun x -> 0.
-  | xk::xs -> let (_, y_i) = xk in 
-    let (x_j, _) = List.nth pts j in
-    let l_j = l_poly j x_j n pts in
-    fun x -> y_i *. (l_j x) +. ((l_comb xs (j + 1) pts n) x)
-let lagrange points = 
-  let n = (List.length points) - 1 in
-  l_comb points 0 points n
+  | x::xs -> let (xj, yj) = x in 
+    let l_j = l_poly j xj points in
+    fun x -> yj *. (l_j x) +. ((linear_combination xs (j + 1) points) x)
+let lagrange points = linear_combination points 0 points
 
 
 (*****************************************************************************)
@@ -59,15 +55,10 @@ let rec string_of_tree print tree = match tree with
   | Empty -> "Empty"
   | Node(i, l, r) -> Printf.sprintf "Node (%s, %s, %s)" (print i) (string_of_tree print l) (string_of_tree print r)
 
-
-(* let rec inorder tree acc = match tree with 
-   | Empty -> acc
-   | Node(i, l, r) -> (inorder l) @ [i] @ (inorder r) *)
 let rec inorder tree acc = match tree with 
   | Empty -> acc
   | Node(i, l, r) -> inorder l (i::(inorder r acc))
 let rec inorder_list tree = inorder tree []
-
 
 (*****************************************************************************)
 (* Assignment 8.8 [7 Points] *)
@@ -95,14 +86,12 @@ let rec find_layer pred layer tree = match tree with
       | None -> find_layer pred (layer - 1) (r ())
       | Some(x) -> Some(x)
 
-
 let find pred tree = 
   let rec iter pred layer tree = 
     match find_layer pred layer tree with
     | None -> iter pred (layer + 1) tree
     | Some(x) -> x in
   iter pred 0 tree
-
 
 (*****************************************************************************)
 (**************************** END OF HOMEWORK ********************************)
