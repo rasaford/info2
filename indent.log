@@ -1,9 +1,9 @@
 INFO: latexindent version 3.4.1, 2018-01-18, a script to indent .tex files
       latexindent lives here: /usr/local/texlive/2018/texmf-dist/scripts/latexindent/
-      Fri Nov 30 19:22:56 2018
-      Filename: /Users/databook/projects/src/gitlab.lrz.de/llr-tum/teaching/era-tutor/Tutoruebung/Aufgaben/neu/u06/era_tutor06_lsg.tex
+      Wed Dec 12 12:13:44 2018
+      Filename: /Users/databook/projects/src/gitlab.lrz.de/llr-tum/teaching/era-tutor/Tutoruebung/Aufgaben/neu/u07/era_tutor07.tex
 INFO: Processing switches:
-INFO: Directory for backup files and indent.log: /Users/databook/projects/src/gitlab.lrz.de/llr-tum/teaching/era-tutor/Tutoruebung/Aufgaben/neu/u06
+INFO: Directory for backup files and indent.log: /Users/databook/projects/src/gitlab.lrz.de/llr-tum/teaching/era-tutor/Tutoruebung/Aufgaben/neu/u07
 INFO: YAML settings read: defaultSettings.yaml
       Reading defaultSettings.yaml from /usr/local/texlive/2018/texmf-dist/scripts/latexindent/defaultSettings.yaml
 INFO: YAML settings read: indentconfig.yaml or .indentconfig.yaml
