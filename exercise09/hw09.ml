@@ -7,25 +7,109 @@ type selection_alg = (string * int * int) list -> int -> string list
 exception Invalid_file_format of string
 
 (* 9.3 - 1 *)
-let read_notes = todo
+let read_notes filename = 
+  let file = open_in filename in
+  let rec read_child children = 
+    try 
+      let line = input_line file in 
+      match String.split_on_char ':' line with 
+      | [name; behaviour] -> let beh = (match behaviour with 
+          | "nice" -> Nice
+          | "naughty" -> Naughty
+          | _ -> raise (Invalid_file_format(filename))) in
+        read_child ((name, beh)::children)
+      | _ -> raise (Invalid_file_format(filename))
+    with End_of_file -> children in
+  try 
+    let children = read_child [] in
+    close_in file;
+    children
+  with e -> close_in file; raise e
 
 (* 9.3 - 2 *)
-let read_wishlist = todo
+let read_wishlist filename = 
+  let file = open_in filename in
+  let rec read_wish wishes =
+    try 
+      let line = input_line file in
+      match String.split_on_char ':' line with
+      | [wish; importance] -> let importance = (try 
+                                                  int_of_string importance
+                                                with _ -> raise (Invalid_file_format(filename))) in
+        if importance < 1 || importance > 100 || 0 = String.length wish 
+        then raise (Invalid_file_format(filename)) 
+        else read_wish ((wish, importance)::wishes)
+      | _ -> raise (Invalid_file_format(filename))
+    with End_of_file -> wishes in
+  try 
+    let wishes = read_wish [] in
+    close_in file;
+    wishes
+  with e -> close_in file; raise e
+
 
 (* 9.3 - 3 *)
-let load_catalogue = todo
+let load_catalogue filename = 
+  let file = open_in filename in
+  let rec read_toy toys =
+    try 
+      let line = input_line file in
+      match String.split_on_char ':' line with
+      | [toy; weight] -> let weight = (try 
+                                         int_of_string weight
+                                       with _ -> raise (Invalid_file_format(filename))) in
+        if weight < 0 || 0 = String.length toy
+        then raise (Invalid_file_format(filename)) 
+        else read_toy ((toy, weight)::toys)
+      | _ -> raise (Invalid_file_format(filename))
+    with End_of_file -> toys in
+  try 
+    let toys = read_toy [] in
+    close_in file;
+    toys
+  with e -> close_in file; raise e
 
 (* 9.3 - 4 *)
-let write_list = todo
+
+let write_list (filename : string) (list : string list) =
+  let file = open_out filename in
+  List.iter (fun p -> Printf.fprintf file "%s\n" p) list;
+  close_out file
 
 (* 9.3 - 5 *)
-let write_letter = todo
+let write_letter filename =
+  let file = open_out filename in
+  Printf.fprintf file "All work and no Play makes Jack a dull boy\n";
+  close_out file
 
 (* 9.3 - 6 *)
-let run_santas_factory = todo
+let rec assemble_cargo wishlist toys acc = match wishlist with
+  | [] -> acc
+  | (name, importance)::ws -> let toy = List.find_opt (fun t -> (fst t) = name) toys in
+    match toy with
+    | Some((_, weight)) -> assemble_cargo ws toys ((name, importance, weight)::acc)
+    | None -> assemble_cargo ws toys acc
+
+let run_santas_factory capacity alg = 
+  let toys = load_catalogue "toys_catalogue.txt" in
+  let children = read_notes "santas_notes.txt" in
+  let nice_c = List.filter (fun c -> let (name, status) = c in
+                             match status with 
+                             | Nice -> true 
+                             | Naughty -> write_letter (Printf.sprintf "%s_letter.txt" name); false) children in
+  let rec distribute children = match children with 
+    | [] -> ()
+    | (name, _)::cs -> 
+      let wishlist = read_wishlist (Printf.sprintf "%s_wishlist.txt" name) in
+      let cargo = assemble_cargo wishlist toys [] in
+      let selection = alg cargo capacity in
+      write_list (Printf.sprintf "%s_presents.txt" name) selection;
+      distribute cs in
+  distribute nice_c
 
 (* 9.3 - 7 *)
-let knapsack = todo
+let knapsack (list : (string * int * int) list) cap = List.map (fun (a, b, c) -> a) list
+
 
 
 
@@ -35,17 +119,17 @@ let knapsack = todo
 (* example inputs, you may use them to test your implementations,
    but [do not change] *)
 let a933_ex1 = ["penguin doll",1; "ocaml book",2; "time machine",53; "bike",7; "barbie's dream house",5;
-  "guitar",6; "colorful pencils",2; "socks",1; "shawl",2; "karaoke machine",13; "superman action doll set",3;
-  "guinea pig",3; "horse",10; "unicorn",8; "sand toys",4; "soccer shoes",3]
+                "guitar",6; "colorful pencils",2; "socks",1; "shawl",2; "karaoke machine",13; "superman action doll set",3;
+                "guinea pig",3; "horse",10; "unicorn",8; "sand toys",4; "soccer shoes",3]
 
 (*****************************************************************************)
 (* TESTS [do not change] *)
 let (=^) a b =
-    (List.sort compare a) = (List.sort compare b)
+  (List.sort compare a) = (List.sort compare b)
 let (=|) a b =
-    let a = List.sort_uniq (fun x y -> compare (fst x) (fst y)) a in
-    let b = List.sort_uniq (fun x y -> compare (fst x) (fst y)) b in
-    a = b
+  let a = List.sort_uniq (fun x y -> compare (fst x) (fst y)) a in
+  let b = List.sort_uniq (fun x y -> compare (fst x) (fst y)) b in
+  a = b
 let check_throws e f =
   try f (); false with e' -> e' = e
 
@@ -66,7 +150,7 @@ let check_letter filename =
     try
       let line = input_line file in
       if line <> "" then true else
-      read ()
+        read ()
     with End_of_file -> false
   in
   let r = read () in
@@ -76,14 +160,14 @@ let check_letter filename =
 let raise' = function Failure f ->
   Printf.printf "TEST FAILURE: %s\n" f;
   raise (Failure f)
-  | e -> raise e
+                    | e -> raise e
 
 let check_run_santas_factory () =
   let test_selection_alg wishes capacity =
     if capacity <> 13 then raise' (Failure "wrong capacity passed to selection_alg");
     (match List.find_opt (fun (t,_,_) -> t = "ocaml book") wishes with
-    | None -> raise' (Failure "wrong list passed to selection_alg")
-    | Some (_,_,w) -> if w <> 2 then raise' (Failure "wrong list passed to selection_alg"));
+     | None -> raise' (Failure "wrong list passed to selection_alg")
+     | Some (_,_,w) -> if w <> 2 then raise' (Failure "wrong list passed to selection_alg"));
     match List.sort (fun (_,i,_) (_,j,_) -> compare j i) wishes with
     | (w1,_,_)::(w2,_,_)::_ -> [w1;w2]
     | _ -> raise' (Failure "wrong list passed to selection_alg")
@@ -142,12 +226,3 @@ let () =
   in
   let passed = filter (fun x -> x) (map test tests) in
   printf "passed %d/%d tests\n" (length passed) (length tests)
-
-
-
-
-
-
-
-
-
