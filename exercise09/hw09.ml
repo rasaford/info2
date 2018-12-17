@@ -108,7 +108,20 @@ let run_santas_factory capacity alg =
   distribute nice_c
 
 (* 9.3 - 7 *)
-let knapsack (list : (string * int * int) list) cap = List.map (fun (a, b, c) -> a) list
+let value list = List.fold_left (fun a (_, i, _) -> a + i) 0 list
+
+let rec knap items cap acc = match items with
+  | [] -> acc
+  | (t, v, w)::xs -> if w > cap 
+    then knap xs cap acc
+    else let inside = knap xs (cap - w) acc in
+      let outside = knap xs cap acc in
+      if v + (value inside) > value outside 
+      then (t, v, w)::inside 
+      else outside
+
+let knapsack (list : (string * int * int) list) cap = 
+  List.map (fun (t, _, _) -> t) (knap list cap [])
 
 
 
@@ -202,7 +215,9 @@ let tests = [
   (* tests for 9.3 - 6 *)
   __LINE_OF__ (fun () -> check_run_santas_factory ());
   (* tests for 9.3 - 7 *)
-  __LINE_OF__ (fun () -> (knapsack ["a",5,4; "b",2,2; "b",2,2; "d",4,5; "b",2,2; "e",8,2] 10) =^ ["a";"b";"b";"e"]);
+  __LINE_OF__ (fun () -> (
+        knapsack ["a",5,4; "b",2,2; "b",2,2; "d",4,5; "b",2,2; "e",8,2] 10) 
+        =^ ["a";"b";"b";"e"]);
   __LINE_OF__ (fun () -> (knapsack ["a",5,4; "a",5,4; "c",11,6; "d",4,5; "e",8,2; "a",5,4] 10) =^ ["c";"e"]);
 ]
 
