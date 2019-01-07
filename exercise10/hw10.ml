@@ -68,7 +68,7 @@ module BoolRing = struct
   let mul a b = a && b
 end
 
-module SetRing (R: FiniteRing) = struct
+module SetRing (R: FiniteRing) : Ring with type t = R.t list = struct
   type t = R.t list
 
   let zero = []
@@ -87,11 +87,55 @@ module SetRing (R: FiniteRing) = struct
   let mul a b = List.filter (fun x -> List.exists (fun y -> x = y) b) a
 
   let compare a b = 
-    let to_str l = to_string (List.sort (fun x y -> R.compare x y) l) in
-    String.compare (to_str a) (to_str b)
+    let sort_to_string l = to_string (List.sort (fun x y -> R.compare x y) l) in
+    String.compare (sort_to_string a) (sort_to_string b)
 end
 
+module DenseMatrix (R: Ring) : Matrix with type elem = R.t and type t = R.t list list = struct 
+  type elem = R.t
+  type t = R.t list list
 
+  let create rows cols = List.init rows (fun x -> List.init cols (fun x -> R.zero))
+
+  let identity size = 
+    List.init size (fun r -> List.init size (fun c -> if r = c then R.one else R.zero))
+
+  let from_rows rows = rows
+
+
+  let rec list_get (i : int) l = match l with 
+    | [] -> failwith "index out of bounds"
+    | x::xs -> if i = 0 then x else list_get (i - 1) xs
+
+  let rec list_set (i: int) v l = match l with 
+    | [] -> []
+    | x::xs -> if i = 0 
+      then v::xs
+      else x::(list_set (i - 1) v xs)
+
+  let set r c v m = list_set r (list_set c v (list_get r m)) m
+  let get r c m = list_get c (list_get r m)
+
+  let list_rev l = 
+    let rec rev acc l = match l with 
+      | [] -> acc 
+      | x::xs -> rev (x::acc) xs in
+    rev [] l 
+
+  let transpose m = List.map List.rev m |> List.rev
+
+  let add a b = List.map2 (fun x y -> List.map2 (fun x y -> R.add x y) x y) a b
+
+  let mul a b = 
+    let t = transpose b in
+    let c = List.map2 R.mul a t |> 
+            List.fold_left R.add 
+
+  let to_string m = List.map (fun x -> List.map R.to_string x 
+                                       |> String.concat " ")  m
+                    |> String.concat "\n"
+
+end 
 
 
 
@@ -193,7 +237,7 @@ let tests =
    * NOTE: Comment tests until you have completed your implementation of DenseMatrix
    * NOTE: from_rows and get have to be correct in order for these tests to work correctly!
   *)
-  (*
+
   let module DM = DenseMatrix (IntRing) in
   let dm0 = DM.from_rows [[4;-2;1];[0;3;-1]] in
   let dm1 = DM.from_rows [[1;2];[-3;4];[3;-1]] in
@@ -208,7 +252,7 @@ let tests =
     __LINE_OF__ (fun () -> check_dense (DM.add dm0 dm0) [[8;-4;2];[0;6;-2]]);
     __LINE_OF__ (fun () -> check_dense (DM.mul dm0 dm1) [[13;-1];[-12;13]]);
     __LINE_OF__ (fun () -> (DM.to_string dm0) = "4 -2 1\n0 3 -1");
-  ] @ *)
+  ] @
 
   (*********************************
    * tests for 10.2 (SparseMatrix) :

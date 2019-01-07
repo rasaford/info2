@@ -4,27 +4,29 @@ let is_prime n =
     d * d > n || (n mod d <> 0 && is_not_divisor (d+1)) in
   n <> 1 && is_not_divisor 2
 
-let rec print_list = function 
-  | [] -> Printf.printf "\n"; ()
-  | x::xs -> let () =  Printf.printf "%d, " x in print_list xs
+let rec print_list l = match l with
+  | [] -> Printf.printf "\n"
+  | x::xs -> Printf.printf "%d, " x; print_list xs
 
+let writeable a =
+  let primes = List.init a (fun x -> x) 
+               |> List.filter is_prime  in
+  let ass = List.init (a / 2) (fun x -> x)
+            |> List.filter (fun x -> x >= 1)
+            |> List.map (fun x -> 2 * x * x) in
+  List.exists (fun p -> 
+      List.exists (fun c -> a = (p + c)) ass
+    ) primes
 
+let fst_question (a : int) = 
+  Printf.printf "First Question: \n";
+  let nums =  List.init a (fun x -> x)
+              |> List.map (fun x -> 2 * x + 1)
+              |> List.filter (fun x -> not (is_prime x))
+              |> List.filter (fun x -> x > 1)
+              |> List.filter (fun x -> not (writeable x)) in
+  print_list nums 
 
-let rec writeable b p a =
-  if b = (p + 2 * a * a) then 
-    let () = Printf.printf "%d\n" b in true
-  else if p > b || (2 * a * a) > b then false
-  else writeable b p (a+1)
-
-
-let fst_question (a : int)  = 
-  let nums = List.init a (fun x -> x) in
-  let primes = List.filter is_prime nums in
-  let pairs = List.map (fun x -> List.init a (fun y -> x + 2 * y * y)) primes in
-  let pairs = List.fold_left (fun a c -> a @ c) [] pairs in
-  let wo = List.filter (fun x -> List.exists (fun y -> x = y) pairs) nums in
-  let res = List.filter (fun x -> not (is_prime x) && x > 1 && (x mod 2 <> 0)) wo in
-  print_list res; ()
 
 let three n = (n * (n + 1)) / 2
 let five n = (n *(3 * n - 1)) / 2
@@ -45,6 +47,6 @@ let rec second_question tn pn hn =
 
 
 let () = 
-  let () = fst_question 100 in
+  let () = fst_question 5000 in
   let () = second_question 1 1 1 in
   ()
