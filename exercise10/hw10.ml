@@ -101,12 +101,13 @@ module DenseMatrix (R: Ring) : Matrix with type elem = R.t and type t = R.t list
 
   let from_rows rows = rows
 
-  let to_string m = List.map (fun x -> List.map R.to_string x 
-                                       |> String.concat " ")  m
-                    |> String.concat "\n"
+  let to_string m = 
+    List.map (fun x -> List.map R.to_string x 
+                       |> String.concat " ")  m
+    |> String.concat "\n"
 
   let rec list_get (i : int) l = match l with 
-    | [] -> failwith "index out of bounds"
+    | [] -> failwith (Printf.sprintf "index out of bounds i: %d" i)
     | x::xs -> if i = 0 then x else list_get (i - 1) xs
 
   let rec list_set (i: int) v l = match l with 
@@ -132,20 +133,19 @@ module DenseMatrix (R: Ring) : Matrix with type elem = R.t and type t = R.t list
 
   let mul a b = 
     let n = List.length a in let m = List.hd a |> List.length in
-    let res = List.init n (fun x -> x)
-              |> List.fold_left (fun res i -> 
-                  List.init m (fun x -> x) 
-                  |> List.fold_left (fun res j -> 
-                      set i j (
-                        List.init m (fun x -> x) 
-                        |> List.fold_left (fun res k -> 
-                            R.add (R.mul (get i k a) (get k j b)) res
-                          ) R.zero
-                      ) res
-                    ) res
-                ) (create (List.length a) (List.hd b |> List.length)) in
-    (* to_string res; *)
-    res
+    let p = List.hd b |> List.length in
+    List.init n (fun x -> x)
+    |> List.fold_left (fun res i -> 
+        List.init p (fun x -> x) 
+        |> List.fold_left (fun res j -> 
+            set i j (
+              List.init m (fun x -> x) 
+              |> List.fold_left (fun res k -> 
+                  R.add (R.mul (get i k a) (get k j b)) res
+                ) R.zero
+            ) res
+          ) res
+      ) (create n p)
 end 
 
 module SparseMatrix (R: Ring) : Matrix with type elem = R.t and type t = (int * int * (int -> int -> R.t)) = struct 
@@ -217,11 +217,11 @@ module SparseMatrix (R: Ring) : Matrix with type elem = R.t and type t = (int * 
       ) (create n m)
 
   let mul am bm =
-    let n = fst am in let m = sec am in 
+    let n = fst am in let m = sec am in let p = sec bm in
     let a = trd am in let b = trd bm in
     List.init n (fun x -> x)
     |> List.fold_left (fun res i -> 
-        List.init m (fun x -> x) 
+        List.init p (fun x -> x) 
         |> List.fold_left (fun res j -> 
             set i j (
               List.init m (fun x -> x) 
@@ -230,7 +230,7 @@ module SparseMatrix (R: Ring) : Matrix with type elem = R.t and type t = (int * 
                 ) R.zero
             ) res
           ) res
-      ) (create (fst am) (sec bm))
+      ) (create n p)
 end
 
 
@@ -341,13 +341,13 @@ let tests =
     List.mapi (fun r row -> List.mapi (fun c col -> col = DM.get r c m) row) l |> List.flatten |> List.for_all (fun x -> x)
   in
   [
-    __LINE_OF__ (fun () -> check_dense (DM.create 2 3) [[0;0;0];[0;0;0]]);
-    __LINE_OF__ (fun () -> check_dense (DM.identity 3) [[1;0;0];[0;1;0];[0;0;1]]);
-    __LINE_OF__ (fun () -> check_dense (DM.set 1 0 7 (DM.identity 2)) [[1;0];[7;1]]);
-    __LINE_OF__ (fun () -> check_dense (DM.transpose dm0) [[4;0];[-2;3];[1;-1]]);
-    __LINE_OF__ (fun () -> check_dense (DM.add dm0 dm0) [[8;-4;2];[0;6;-2]]);
+    (* __LINE_OF__ (fun () -> check_dense (DM.create 2 3) [[0;0;0];[0;0;0]]);
+       __LINE_OF__ (fun () -> check_dense (DM.identity 3) [[1;0;0];[0;1;0];[0;0;1]]);
+       __LINE_OF__ (fun () -> check_dense (DM.set 1 0 7 (DM.identity 2)) [[1;0];[7;1]]);
+       __LINE_OF__ (fun () -> check_dense (DM.transpose dm0) [[4;0];[-2;3];[1;-1]]);
+       __LINE_OF__ (fun () -> check_dense (DM.add dm0 dm0) [[8;-4;2];[0;6;-2]]); *)
     __LINE_OF__ (fun () -> check_dense (DM.mul dm0 dm1) [[13;-1];[-12;13]]);
-    __LINE_OF__ (fun () -> (DM.to_string dm0) = "4 -2 1\n0 3 -1");
+    (* __LINE_OF__ (fun () -> (DM.to_string dm0) = "4 -2 1\n0 3 -1"); *)
   ] @
 
   (*********************************
