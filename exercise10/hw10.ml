@@ -70,7 +70,6 @@ end
 
 module SetRing (R: FiniteRing) : Ring with type t = R.t list = struct
   type t = R.t list
-
   let zero = []
 
   let one = R.elems
@@ -102,6 +101,9 @@ module DenseMatrix (R: Ring) : Matrix with type elem = R.t and type t = R.t list
 
   let from_rows rows = rows
 
+  let to_string m = List.map (fun x -> List.map R.to_string x 
+                                       |> String.concat " ")  m
+                    |> String.concat "\n"
 
   let rec list_get (i : int) l = match l with 
     | [] -> failwith "index out of bounds"
@@ -116,26 +118,120 @@ module DenseMatrix (R: Ring) : Matrix with type elem = R.t and type t = R.t list
   let set r c v m = list_set r (list_set c v (list_get r m)) m
   let get r c m = list_get c (list_get r m)
 
-  let list_rev l = 
-    let rec rev acc l = match l with 
-      | [] -> acc 
-      | x::xs -> rev (x::acc) xs in
-    rev [] l 
-
-  let transpose m = List.map List.rev m |> List.rev
+  let transpose ma =
+    let n = List.length ma in let m = List.hd ma |> List.length in
+    List.init n (fun x -> x)
+    |> List.fold_left (fun res i -> 
+        List.init m (fun x -> x)
+        |> List.fold_left (fun res j -> 
+            set j i (get i j ma) res
+          ) res
+      ) (create m n)
 
   let add a b = List.map2 (fun x y -> List.map2 (fun x y -> R.add x y) x y) a b
 
   let mul a b = 
-    let t = transpose b in
-    let c = List.map2 R.mul a t |> 
-            List.fold_left R.add 
-
-  let to_string m = List.map (fun x -> List.map R.to_string x 
-                                       |> String.concat " ")  m
-                    |> String.concat "\n"
-
+    let n = List.length a in let m = List.hd a |> List.length in
+    let res = List.init n (fun x -> x)
+              |> List.fold_left (fun res i -> 
+                  List.init m (fun x -> x) 
+                  |> List.fold_left (fun res j -> 
+                      set i j (
+                        List.init m (fun x -> x) 
+                        |> List.fold_left (fun res k -> 
+                            R.add (R.mul (get i k a) (get k j b)) res
+                          ) R.zero
+                      ) res
+                    ) res
+                ) (create (List.length a) (List.hd b |> List.length)) in
+    (* to_string res; *)
+    res
 end 
+
+module SparseMatrix (R: Ring) : Matrix with type elem = R.t and type t = (int * int * (int -> int -> R.t)) = struct 
+  type elem = R.t
+  (* n, m, Matrix function *)
+  type t = (int * int * (int -> int -> R.t))
+
+  let fst t = let (x, _, _) = t in x
+
+  let sec t = let (_, x, _) = t in x
+
+  let trd t = let (_, _, x) = t in x
+
+  let to_string ma = 
+    let n = fst ma in let m = sec ma in let matrix = trd ma in 
+    List.init n (fun x -> x)
+    |> List.fold_left (fun str i -> 
+        String.concat (if i = 0 then "" else "\n")
+          [str; List.init m (fun x -> x) 
+                |> List.fold_left (fun str j -> 
+                    String.concat (if j = 0 then "" else " ")
+                      [str; R.to_string (matrix i j)]
+                  ) ""]
+      ) ""
+
+  let set r c v m = (fst m, sec m, (fun x y -> if x = r && y = c then v else (trd m) x y))
+
+  let get r c m = (trd m) r c
+
+  let create n m = (n, m, fun x y -> R.zero)
+
+  let identity n = 
+    let rec diag n acc = match n with  
+      | 0 -> set 0 0 R.one acc
+      | i -> diag (i - 1) (set i i R.one acc) in
+    diag n (create n n)
+
+  let from_rows l = 
+    let n = (List.length l) in let m = (List.hd l |> List.length) in
+    let rec cols l i j m = match l with  
+      | [] -> m
+      | x::xs -> cols xs i (j + 1) (if x != R.zero then set i j x m else m) in
+    let rec rows l i m = match l with 
+      | [] -> m
+      | x::xs -> rows xs (i + 1) (cols x i 0 m) in
+    rows l 0 (create n m)
+
+  let transpose ma = 
+    let n = fst ma in let m = sec ma in
+    let ma = trd ma in
+    List.init n (fun x -> x)
+    |> List.fold_left (fun res i -> 
+        List.init m (fun x -> x)
+        |> List.fold_left (fun res j -> 
+            set j i (ma i j) res
+          ) res
+      ) (create m n)
+
+
+  let add a b = 
+    let n = fst a in let m = sec a in 
+    let a = trd a in let b = trd b in
+    List.init n (fun x -> x)
+    |> List.fold_left (fun res i -> 
+        List.init m (fun x -> x) 
+        |> List.fold_left (fun res j -> 
+            set i j (R.add (a i j) (b i j)) res
+          ) res
+      ) (create n m)
+
+  let mul am bm =
+    let n = fst am in let m = sec am in 
+    let a = trd am in let b = trd bm in
+    List.init n (fun x -> x)
+    |> List.fold_left (fun res i -> 
+        List.init m (fun x -> x) 
+        |> List.fold_left (fun res j -> 
+            set i j (
+              List.init m (fun x -> x) 
+              |> List.fold_left (fun res k -> 
+                  R.add (R.mul (a i k) (b k j)) res
+                ) R.zero
+            ) res
+          ) res
+      ) (create (fst am) (sec bm))
+end
 
 
 
@@ -259,7 +355,6 @@ let tests =
    * NOTE: Comment tests until you have completed your implementation of SparseMatrix
    * NOTE: from_rows and get have to be correct in order for these tests to work correctly!
   *)
-  (*
   let module SM = SparseMatrix (IntRing) in
   let sm0 = SM.from_rows [[4;-2;1];[0;3;-1]] in
   let sm1 = SM.from_rows [[1;2];[-3;4];[3;-1]] in
@@ -274,7 +369,7 @@ let tests =
     __LINE_OF__ (fun () -> check_sparse (SM.add sm0 sm0) [[8;-4;2];[0;6;-2]]);
     __LINE_OF__ (fun () -> check_sparse (SM.mul sm0 sm1) [[13;-1];[-12;13]]);
     __LINE_OF__ (fun () -> (SM.to_string sm0) = "4 -2 1\n0 3 -1");
-  ] @ *)
+  ] @
   []
 
 
