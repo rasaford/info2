@@ -6,7 +6,7 @@
       {
         "label": "ocaml",
         "type": "shell",
-        "command": "ocaml ${file}",
+        "command": "ocaml -I +threads unix.cma threads.cma ${file}",
         "group": {
           "kind": "build",
           "isDefault": true
