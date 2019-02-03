@@ -260,15 +260,15 @@ let tests = [
   __LINE_OF__ (fun () -> let pcon = par_binary ( ^ ) in pcon ["th";"";"ver";"nic"] ["is";"is";"y";"e"] = ["this";"is";"very";"nice"] && threads_created () = 4);
   (* 13.5
      NOTE: Array's functions cannot be tested in isolation, so if a test for size fails it may very well be due to a mistake in your implementation of make *)
-  (* __LINE_OF__ (fun () -> let _ = Array.make 3 "abc" in threads_created () = 1); *)
-  (* __LINE_OF__ (fun () -> let a = Array.make 3 1. in Array.destroy a; threads_created () = 1); *)
+  __LINE_OF__ (fun () -> let _ = Array.make 3 "abc" in threads_created () = 1);
+  __LINE_OF__ (fun () -> let a = Array.make 3 1. in Array.destroy a; threads_created () = 1);
   __LINE_OF__ (fun () -> let a = Array.make 3 0 in Array.size a = 3);
-  (* __LINE_OF__ (fun () -> let a = Array.make 3 'x' in Array.get 0 a = 'x');
-     __LINE_OF__ (fun () -> let a = Array.make 3 'x' in try let _ = Array.get 3 a in false with OutOfBounds -> true); *)
+  __LINE_OF__ (fun () -> let a = Array.make 3 'x' in Array.get 0 a = 'x');
+  __LINE_OF__ (fun () -> let a = Array.make 3 'x' in try let _ = Array.get 3 a in false with OutOfBounds -> true);
   __LINE_OF__ (fun () -> let a = Array.make 3 0 in Array.set 1 5 a; Array.get 0 a = 0 && Array.get 1 a = 5 && Array.get 2 a = 0 && threads_created () = 1);
-  (* __LINE_OF__ (fun () -> let a = Array.make 3 'x' in try Array.set 3 'u' a; false with OutOfBounds -> true); *)
-  (* __LINE_OF__ (fun () -> let a = Array.make 3 0 in Array.resize 5 1 a; Array.size a = 5 && Array.get 2 a = 0 && Array.get 3 a = 1 && Array.get 4 a = 1 && threads_created () = 1); *)
-  (* __LINE_OF__ (fun () -> let a = Array.make 3 0 in Array.resize 1 1 a; Array.size a = 1 && Array.get 0 a = 0 && threads_created () = 1); *)
+  __LINE_OF__ (fun () -> let a = Array.make 3 'x' in try Array.set 3 'u' a; false with OutOfBounds -> true);
+  __LINE_OF__ (fun () -> let a = Array.make 3 0 in Array.resize 5 1 a; Array.size a = 5 && Array.get 2 a = 0 && Array.get 3 a = 1 && Array.get 4 a = 1 && threads_created () = 1);
+  __LINE_OF__ (fun () -> let a = Array.make 3 0 in Array.resize 1 1 a; Array.size a = 1 && Array.get 0 a = 0 && threads_created () = 1);
   (* 13.6
      NOTE: Document server functions cannot be tested in isolation, so if a test for view fails it may very well be due to a mistake in your implementation of document_server *)
   __LINE_OF__ (fun () -> let _ = document_server () in threads_created () = 1); (* basic thread creation *)
